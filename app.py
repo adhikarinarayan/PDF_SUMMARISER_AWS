@@ -1,6 +1,6 @@
 import os
 import fitz  # PyMuPDF
-import google.generativeai as genai
+from google import genai
 from flask import Flask, render_template, request
 from dotenv import load_dotenv
 
@@ -9,13 +9,13 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# --- Modern Key Management ---
+client = genai.Client()
+# --- Modern Key Management
 # For local development, we use a .env file.
 # In production (Phase 2+), this will be replaced with AWS Secrets Manager.
 try:
     api_key = os.environ["GEMINI_API_KEY"]
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-pro')
+    model="gemini-2.5-flash"
 except KeyError:
     # This error will be raised if the API key is not set.
     model = None
@@ -32,7 +32,9 @@ def summarize_with_gemini(text):
     prompt = f"Please provide a concise summary of the following text:\n\n{text}"
     
     try:
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+        model="gemini-2.5-flash", contents= prompt
+        )
         return response.text
     except Exception as e:
         return f"An error occurred while calling the Gemini API: {e}"

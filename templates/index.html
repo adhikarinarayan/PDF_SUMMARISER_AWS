@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Summarizer with Gemini</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 40px; background-color: #f4f4f9; color: #333; }
+        .container { max-width: 750px; margin: auto; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #444; }
+        form { margin-bottom: 25px; }
+        input[type="file"] { border: 1px solid #ddd; padding: 10px; border-radius: 4px; }
+        button { background-color: #007bff; color: white; padding: 12px 18px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #0056b3; }
+        .summary { margin-top: 20px; border: 1px solid #e0e0e0; padding: 20px; border-radius: 8px; background-color: #fafafa; }
+        .error { color: #d9534f; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Upload a PDF to Summarize with Gemini</h1>
+        <form method="post" enctype="multipart/form-data">
+            <input type="file" name="pdf_file" accept=".pdf" required>
+            <button type="submit">Summarize</button>
+        </form>
+
+        {% if summary %}
+        <div class="summary">
+            <h2>Summary</h2>
+            <p style="white-space: pre-wrap;">{{ summary }}</p>
+        </div>
+        {% endif %}
+
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+    </div>
+</body>
+</html>

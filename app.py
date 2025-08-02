@@ -4,37 +4,42 @@ from google import genai
 from flask import Flask, render_template, request
 from dotenv import load_dotenv
 
-# Load environment variables from the .env file
+# Load environment variables from the .env file for local development
 load_dotenv()
 
 app = Flask(__name__)
 
-client = genai.Client()
-# --- Modern Key Management
-# For local development, we use a .env file.
-# In production (Phase 2+), this will be replaced with AWS Secrets Manager.
+
+
+# --- Correct, Modern Client Initialization ---
+# We will create the client once when the application starts.
 try:
+    # 1. Read our specific key from the environment and STRIP it of any whitespace.
     api_key = os.environ["GEMINI_API_KEY"]
-    model="gemini-2.5-flash"
+    
+    # 2. Instantiate the client, EXPLICITLY passing the API key to it.
+    client = genai.Client(api_key=api_key)
+    
+    # 3. Define the model you want to use
+    MODEL_NAME = "gemini-2.5-flash"
+    
 except KeyError:
-    # This error will be raised if the API key is not set.
-    model = None
-    print("ERROR: GEMINI_API_KEY environment variable not set.")
+    print("FATAL ERROR: GEMINI_API_KEY environment variable not set.")
+    client = None
 except Exception as e:
-    model = None
-    print(f"An error occurred during Gemini configuration: {e}")
+    print(f"An error occurred during Gemini client initialization: {e}")
+    client = None
 
 def summarize_with_gemini(text):
-    """Calls the Gemini API to summarize the given text."""
-    if model is None:
-        return "Gemini model is not configured. Please check your API key."
+    """Calls the Gemini API to summarize the given text using the client."""
+    if client is None:
+        return "Gemini client is not initialized. Please check server logs."
     
     prompt = f"Please provide a concise summary of the following text:\n\n{text}"
     
     try:
-        response = client.models.generate_content(
-        model="gemini-2.5-flash", contents= prompt
-        )
+        # 4. Use the client to generate content.
+        response = client.models.generate_content(model=MODEL_NAME, contents=prompt)
         return response.text
     except Exception as e:
         return f"An error occurred while calling the Gemini API: {e}"
@@ -52,12 +57,11 @@ def index():
         file = request.files['pdf_file']
         
         if file.filename == '':
-            error = "No file selected. Please choose a PDF file to upload."
+            error = "No selected file. Please choose a PDF file to upload."
             return render_template('index.html', error=error), 400
 
         if file and file.filename.endswith('.pdf'):
             try:
-                # Use PyMuPDF to open the file stream and extract text
                 pdf_document = fitz.open(stream=file.read(), filetype="pdf")
                 extracted_text = "".join(page.get_text() for page in pdf_document)
                 
@@ -74,6 +78,4 @@ def index():
     return render_template('index.html', summary=summary, error=error)
 
 if __name__ == '__main__':
-    # The debug=True flag is useful for development as it provides detailed error pages
-    # and automatically reloads the server when you make code changes.
     app.run(host='0.0.0.0', port=5000, debug=True)

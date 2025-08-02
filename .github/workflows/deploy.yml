@@ -35,7 +35,7 @@ jobs:
     - name: Build, tag, and push image to Amazon ECR
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: flask-pdf-summarizer
+        ECR_REPOSITORY: pdf_summariser_aws
         IMAGE_TAG: ${{ github.sha }} # Use the commit hash for a unique tag
       run: |
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
